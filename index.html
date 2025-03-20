@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trading Post Catalog</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f1e8;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .trading-post {
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .post-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #e0d5c1;
+      padding-bottom: 10px;
+    }
+    .post-header h2 {
+      margin: 0;
+      font-size: 24px;
+      color: #3a3a3a;
+    }
+    .post-icon {
+      width: 36px;
+      height: 36px;
+      margin-right: 10px;
+      background-color: #e0d5c1;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .items {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .item {
+      display: grid;
+      grid-template-columns: 40px 1fr 1fr;
+      align-items: center;
+      padding: 10px;
+      border-radius: 6px;
+      background-color: #f5f1e8;
+      transition: background-color 0.2s;
+    }
+    .item:hover {
+      background-color: #e9e4d8;
+    }
+    .item-icon {
+      width: 30px;
+      height: 30px;
+      background-color: #ffd966;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #7f6000;
+    }
+    .item-name {
+      font-weight: bold;
+      color: #3a3a3a;
+    }
+    .materials {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .material-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .material-name {
+      background-color: #fff;
+      border: 1px solid #e0d5c1;
+      border-radius: 4px;
+      padding: 5px 10px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-grow: 1;
+    }
+    .material-name:hover {
+      background-color: #f0e8d9;
+      border-color: #c9b38c;
+    }
+    .material-name.copied {
+      background-color: #d1e7dd;
+      border-color: #9ed5b9;
+    }
+    .material-quantity {
+      background-color: #f0e8d9;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: bold;
+      width: 40px;
+      text-align: center;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 8px 16px;
+      background-color: #e0d5c1;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+    .tab.active {
+      background-color: #c9b38c;
+      color: #fff;
+    }
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #4CAF50;
+      color: white;
+      padding: 16px;
+      border-radius: 4px;
+      z-index: 1;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      font-weight: bold;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    .toast.show {
+      opacity: 1;
+      visibility: visible;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>生活貿易懶人購買複製</h1>
+
+    
+    <div class="tabs">
+      <div class="tab active" data-post="post-a">佩拉貿易所 (A)</div>
+      <div class="tab" data-post="post-b">凱麗達貿易所 (B)</div>
+      <div class="tab" data-post="post-c">綠洲貿易所 (C)</div>
+      <div class="tab" data-post="post-d">卡魯森林貿易所 (D)</div>
+    </div>
+    
+    <div class="trading-post" id="post-a">
+      <div class="post-header">
+        <div class="post-icon">A</div>
+        <h2>佩拉貿易所</h2>
+      </div>
+      <div class="items">
+        <div class="item">
+          <div class="item-icon">🌋</div>
+          <div class="item-name">火山泥漿面膜</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="銅板">銅板</div>
+              <div class="material-quantity">x50</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="神秘的香草粉">神秘的香草粉</div>
+              <div class="material-quantity">x75</div>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="item-icon">🔥</div>
+          <div class="item-name">火山石</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="秘銀板">秘銀板</div>
+              <div class="material-quantity">x30</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="大麥粉">大麥粉</div>
+              <div class="material-quantity">x45</div>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="item-icon">🦄</div>
+          <div class="item-name">伊克西翁的角</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="人偶500藥水">人偶500藥水</div>
+              <div class="material-quantity">x30</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="金板">金板</div>
+              <div class="material-quantity">x50</div>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="item-icon">🥚</div>
+          <div class="item-name">火山蜥蜴的卵</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="閃光紙">閃光紙</div>
+              <div class="material-quantity">x40</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="優質布料">優質布料</div>
+              <div class="material-quantity">x40</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="強化生命藥水(效果500)">強化生命藥水(效果500)</div>
+              <div class="material-quantity">x16</div>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="item-icon">🦬</div>
+          <div class="item-name">拉斯帕黑豹的皮革</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="基因突變體">基因突變體</div>
+              <div class="material-quantity">x3</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="和諧的波斯菊香水">和諧的波斯菊香水</div>
+              <div class="material-quantity">x6</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="特級木柴">特級木柴</div>
+              <div class="material-quantity">x9</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="trading-post" id="post-b" style="display: none;">
+      <div class="post-header">
+        <div class="post-icon">B</div>
+        <h2>凱麗達貿易所</h2>
+      </div>
+      <div class="items">
+        <div class="item">
+          <div class="item-icon">🍳</div>
+          <div class="item-name">麥飯石烤蛋</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="強化魔法藥水(效果500)">強化魔法藥水(效果500)</div>
+              <div class="material-quantity">x25</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="高級木柴">高級木柴</div>
+              <div class="material-quantity">x1</div>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="item-icon">🐟</div>
+          <div class="item-name">凱麗達鮭魚</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="能量轉換器">能量轉換器</div>
+              <div class="material-quantity">x15</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="淨化的兔子腳">淨化的兔子腳</div>
+              <div class="material-quantity">x15</div>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="item-icon">🧖</div>
+          <div class="item-name">溫泉入浴劑</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="黏黏的草">黏黏的草</div>
+              <div class="material-quantity">x30</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="優質香草蠟燭">優質香草蠟燭</div>
+              <div class="material-quantity">x20</div>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="item-icon">⛺</div>
+          <div class="item-name">大型露營帳篷</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="人工草皮">人工草皮</div>
+              <div class="material-quantity">x8</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="綠寶石保險絲">綠寶石保險絲</div>
+              <div class="material-quantity">x8</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="高級皮繩">高級皮繩</div>
+              <div class="material-quantity">x40</div>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="item-icon">🧂</div>
+          <div class="item-name">玫瑰鹽</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="秘銀鐵釘">秘銀鐵釘</div>
+              <div class="material-quantity">x9</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="彎炮專用浸毒瓦伊凡弩箭">彎炮專用浸毒瓦伊凡弩箭</div>
+              <div class="material-quantity">x9</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="優質木柴">優質木柴</div>
+              <div class="material-quantity">x9</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="trading-post" id="post-c" style="display: none;">
+      <div class="post-header">
+        <div class="post-icon">C</div>
+        <h2>綠洲貿易所</h2>
+      </div>
+      <div class="items">
+        <div class="item">
+          <div class="item-icon">🏝️</div>
+          <div class="item-name">細沙</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="強化耐力藥水(效果500)">強化耐力藥水(效果500)</div>
+              <div class="material-quantity">x75</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="繩結線">繩結線</div>
+              <div class="material-quantity">x50</div>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="item-icon">🦌</div>
+          <div class="item-name">牟獄鬼魂的翅膀</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="抱枕用棉花">抱枕用棉花</div>
+              <div class="material-quantity">x15</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="優質絲綢">優質絲綢</div>
+              <div class="material-quantity">x30</div>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="item-icon">🏝️</div>
+          <div class="item-name">綠洲圖書</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="優質皮繩">優質皮繩</div>
+              <div class="material-quantity">x10</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="粗線">粗線</div>
+              <div class="material-quantity">x30</div>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="item-icon">🌸</div>
+          <div class="item-name">仙人掌花</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="精靈的白葡萄酒">精靈的白葡萄酒</div>
+              <div class="material-quantity">x8</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="銀板">銀板</div>
+              <div class="material-quantity">x16</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="高級布料">高級布料</div>
+              <div class="material-quantity">x32</div>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="item-icon">🦖</div>
+          <div class="item-name">巨大尖牙化石</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="龍物遊戲組合">龍物遊戲組合</div>
+              <div class="material-quantity">x3</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="乾草堆">乾草堆</div>
+              <div class="material-quantity">x9</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="聚集魔力的木柴">聚集魔力的木柴</div>
+              <div class="material-quantity">x15</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="trading-post" id="post-d" style="display: none;">
+      <div class="post-header">
+        <div class="post-icon">D</div>
+        <h2>卡魯森林貿易所</h2>
+      </div>
+      <div class="items">
+        <div class="item">
+          <div class="item-icon">🪑</div>
+          <div class="item-name">木製桌子</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="鮮蝦訓練誘餌">鮮蝦訓練誘餌</div>
+              <div class="material-quantity">x100</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="希里原">希里原</div>
+              <div class="material-quantity">x50</div>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="item-icon">🏺</div>
+          <div class="item-name">木工藝品</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="魔法的羊皮紙">魔法的羊皮紙</div>
+              <div class="material-quantity">x15</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="粗繩">粗繩</div>
+              <div class="material-quantity">x30</div>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="item-icon">🐎</div>
+          <div class="item-name">石頭戰馬雕刻像</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="稀原合金">稀原合金</div>
+              <div class="material-quantity">x20</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="小麥粉">小麥粉</div>
+              <div class="material-quantity">x50</div>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="item-icon">🍄</div>
+          <div class="item-name">卡魯香菇</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="旋轉齒輪">旋轉齒輪</div>
+              <div class="material-quantity">x8</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="中級木柴">中級木柴</div>
+              <div class="material-quantity">x40</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="高級絲綢">高級絲綢</div>
+              <div class="material-quantity">x32</div>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="item-icon">🐚</div>
+          <div class="item-name">貝殼化石</div>
+          <div class="materials">
+            <div class="material-row">
+              <div class="material-name" data-copy="能量增幅裝置">能量增幅裝置</div>
+              <div class="material-quantity">x6</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="堅固之鏈">堅固之鏈</div>
+              <div class="material-quantity">x3</div>
+            </div>
+            <div class="material-row">
+              <div class="material-name" data-copy="魔法的羽毛筆">魔法的羽毛筆</div>
+              <div class="material-quantity">x15</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="toast" class="toast">已複製：<span id="copied-text"></span></div>
+  
+  <script>
+    // Tab switching
+    const tabs = document.querySelectorAll('.tab');
+    const posts = document.querySelectorAll('.trading-post');
+    
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetPost = tab.getAttribute('data-post');
+        
+        // Update active tab
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // Show selected post, hide others
+        posts.forEach(post => {
+          post.style.display = post.id === targetPost ? 'block' : 'none';
+        });
+      });
+    });
+    
+    // Copy functionality with direct execution method
+    const materialNames = document.querySelectorAll('.material-name');
+    const toast = document.getElementById('toast');
+    const copiedText = document.getElementById('copied-text');
+    
+    materialNames.forEach(materialName => {
+      materialName.addEventListener('click', function() {
+        const textToCopy = this.getAttribute('data-copy');
+        
+        // Use the execCommand method which works better in more browsers
+        const tempTextArea = document.createElement('textarea');
+        tempTextArea.value = textToCopy;
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempTextArea);
+        
+        // Visual feedback
+        this.classList.add('copied');
+        setTimeout(() => {
+          this.classList.remove('copied');
+        }, 1000);
+        
+        // Show toast notification
+        copiedText.textContent = textToCopy;
+        toast.classList.add('show');
+        setTimeout(() => {
+          toast.classList.remove('show');
+        }, 1500);
+      });
+    });
+  </script>
+</body>
+</html>
