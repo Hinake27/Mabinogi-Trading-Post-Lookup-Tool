@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mabinogi Trading Post Lookup</title>
+  <style>
+    :root {
+      --bg: #e8d7b8;
+      --bg-deep: #c89e63;
+      --panel: rgba(48, 28, 16, 0.82);
+      --panel-soft: rgba(255, 247, 229, 0.9);
+      --panel-muted: rgba(84, 52, 32, 0.74);
+      --text: #f9f1dc;
+      --text-dark: #382216;
+      --muted: #dbc39c;
+      --accent: #f6c56a;
+      --accent-strong: #ff9d39;
+      --border: rgba(255, 227, 179, 0.28);
+      --shadow: 0 28px 60px rgba(33, 18, 8, 0.28);
+      --shadow-soft: 0 14px 32px rgba(33, 18, 8, 0.16);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(255, 213, 130, 0.4), transparent 36%),
+        linear-gradient(180deg, #f2e1bb 0%, #dbb27b 44%, #b2744c 100%);
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: auto;
+      pointer-events: none;
+      z-index: 0;
+      border-radius: 999px;
+      filter: blur(10px);
+      opacity: 0.55;
+    }
+
+    body::before {
+      width: 280px;
+      height: 280px;
+      right: -60px;
+      top: 64px;
+      background: rgba(255, 193, 100, 0.46);
+    }
+
+    body::after {
+      width: 220px;
+      height: 220px;
+      left: -80px;
+      bottom: 100px;
+      background: rgba(114, 181, 142, 0.24);
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      width: min(1400px, calc(100% - 32px));
+      margin: 24px auto;
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 20px;
+    }
+
+    .sidebar,
+    .main {
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      padding: 24px;
+      border-radius: var(--radius-xl);
+      background:
+        linear-gradient(180deg, rgba(70, 39, 21, 0.94), rgba(44, 26, 16, 0.88)),
+        linear-gradient(135deg, rgba(255, 214, 133, 0.12), transparent 70%);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .crest {
+      display: inline-flex;
+      width: 72px;
+      height: 72px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(255, 214, 136, 0.24), rgba(255, 154, 67, 0.24));
+      border: 1px solid rgba(255, 225, 175, 0.28);
+      box-shadow: inset 0 1px 0 rgba(255, 246, 225, 0.3);
+      overflow: hidden;
+    }
+
+    .crest img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .sidebar h1 {
+      margin: 0;
+      font-family: "Times New Roman", "PMingLiU", serif;
+      font-size: 2rem;
+      line-height: 1.1;
+      letter-spacing: 0.06em;
+    }
+
+    .sidebar p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 0.96rem;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat-card {
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 245, 220, 0.08);
+      border: 1px solid rgba(255, 236, 196, 0.12);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .stat-label {
+      display: block;
+      margin-bottom: 6px;
+      color: rgba(255, 233, 193, 0.72);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      font-size: 1.45rem;
+      font-weight: 700;
+    }
+
+    .post-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .post-button {
+      width: 100%;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 16px;
+      border: 1px solid rgba(255, 232, 193, 0.12);
+      border-radius: 16px;
+      background: rgba(255, 248, 231, 0.08);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+    }
+
+    .post-button:hover,
+    .post-button:focus-visible {
+      transform: translateY(-2px);
+      border-color: rgba(255, 225, 173, 0.36);
+      background: rgba(255, 248, 231, 0.14);
+      outline: none;
+    }
+
+    .post-button.active {
+      background: linear-gradient(135deg, rgba(255, 199, 102, 0.26), rgba(255, 153, 58, 0.22));
+      border-color: rgba(255, 229, 183, 0.42);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    .post-emoji {
+      width: 42px;
+      height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .post-emoji img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .post-meta strong,
+    .post-meta span {
+      display: block;
+    }
+
+    .post-meta strong {
+      margin-bottom: 2px;
+      font-size: 0.98rem;
+    }
+
+    .post-meta span,
+    .post-count,
+    .hint {
+      color: rgba(255, 233, 193, 0.72);
+      font-size: 0.82rem;
+    }
+
+    .quick-copy {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255, 247, 229, 0.08);
+      border: 1px solid rgba(255, 236, 196, 0.12);
+      display: grid;
+      gap: 10px;
+    }
+
+    .quick-copy button,
+    .search-clear,
+    .action-button,
+    .material-button {
+      font: inherit;
+    }
+
+    .quick-copy button,
+    .search-clear,
+    .action-button {
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: transform 180ms ease, filter 180ms ease;
+    }
+
+    .quick-copy button:hover,
+    .search-clear:hover,
+    .action-button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+    }
+
+    .quick-copy button,
+    .action-button.primary {
+      padding: 12px 16px;
+      color: #43270f;
+      background: linear-gradient(135deg, #ffd57f, #ffaf55);
+      font-weight: 700;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .main {
+      border-radius: 32px;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(255, 250, 236, 0.94), rgba(244, 225, 190, 0.88)),
+        linear-gradient(135deg, rgba(255, 205, 135, 0.26), transparent 56%);
+      color: var(--text-dark);
+    }
+
+    .hero {
+      padding: 30px 30px 22px;
+      display: grid;
+      gap: 18px;
+      background:
+        linear-gradient(135deg, rgba(255, 214, 146, 0.72), rgba(255, 244, 221, 0.6)),
+        radial-gradient(circle at top right, rgba(255, 169, 95, 0.42), transparent 36%);
+      border-bottom: 1px solid rgba(118, 72, 32, 0.12);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #86552d;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .hero-head {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .hero-logo {
+      width: 88px;
+      height: 88px;
+      flex-shrink: 0;
+      border-radius: 18px;
+      border: 3px solid rgba(110, 69, 35, 0.28);
+      background: rgba(255, 244, 221, 0.68);
+      box-shadow: 0 12px 24px rgba(91, 57, 29, 0.14);
+      overflow: hidden;
+    }
+
+    .hero-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .hero h2 {
+      margin: 0;
+      font-family: "Times New Roman", "PMingLiU", serif;
+      font-size: clamp(2rem, 4vw, 3.35rem);
+      line-height: 1;
+      letter-spacing: 0.04em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 720px;
+      color: #75523a;
+      line-height: 1.75;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: rgba(255, 251, 243, 0.78);
+      border: 1px solid rgba(110, 69, 35, 0.12);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    }
+
+    .search-box input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text-dark);
+      font-size: 1rem;
+    }
+
+    .search-box input::placeholder {
+      color: #a47a54;
+    }
+
+    .search-clear {
+      padding: 9px 14px;
+      background: rgba(120, 73, 40, 0.12);
+      color: #6d4528;
+    }
+
+    .summary {
+      padding: 0 30px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .summary-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: rgba(108, 70, 35, 0.1);
+      border: 1px solid rgba(110, 69, 35, 0.12);
+      color: #6b4327;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    }
+
+    .content {
+      padding: 0 30px 30px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .item-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .item-card {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.95fr);
+      gap: 16px;
+      align-items: stretch;
+      padding: 10px;
+      border-radius: 22px;
+      background:
+        linear-gradient(180deg, rgba(177, 135, 79, 0.55), rgba(142, 101, 57, 0.62)),
+        repeating-linear-gradient(
+          90deg,
+          rgba(118, 80, 43, 0.2) 0,
+          rgba(118, 80, 43, 0.2) 8px,
+          rgba(173, 128, 75, 0.16) 8px,
+          rgba(173, 128, 75, 0.16) 16px
+        );
+      border: 2px solid rgba(106, 69, 38, 0.42);
+      box-shadow: var(--shadow-soft);
+      transform: translateY(18px);
+      opacity: 0;
+      animation: rise-in 520ms ease forwards;
+    }
+
+    .item-main {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 94px minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+      padding: 12px 16px;
+      border-radius: 16px;
+      background:
+        linear-gradient(180deg, rgba(147, 224, 250, 0.95), rgba(108, 206, 238, 0.95)),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.16), transparent 55%);
+      border: 2px solid rgba(97, 84, 54, 0.5);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    .item-image-wrap {
+      position: relative;
+      width: 94px;
+      height: 94px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #ffd733, #efb81e);
+      border: 4px solid #7d5e2f;
+      box-shadow: inset 0 0 0 2px rgba(255, 249, 203, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .item-image-wrap img {
+      max-width: 78px;
+      max-height: 78px;
+      object-fit: contain;
+      image-rendering: auto;
+      filter: drop-shadow(0 6px 8px rgba(36, 22, 10, 0.28));
+      transition: transform 220ms ease;
+    }
+
+    .item-card:hover .item-image-wrap img {
+      transform: scale(1.05);
+    }
+
+    .item-badge {
+      display: none;
+    }
+
+    .item-body {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .item-title {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .item-body h3 {
+      margin: 0;
+      color: #ffffff;
+      font-size: clamp(1.55rem, 2vw, 2.15rem);
+      line-height: 1.1;
+      letter-spacing: 0.02em;
+      text-shadow:
+        -2px -2px 0 rgba(73, 69, 69, 0.78),
+        2px -2px 0 rgba(73, 69, 69, 0.78),
+        -2px 2px 0 rgba(73, 69, 69, 0.78),
+        2px 2px 0 rgba(73, 69, 69, 0.78),
+        0 3px 0 rgba(73, 69, 69, 0.45);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-subtitle {
+      display: none;
+    }
+
+    .materials-panel {
+      min-width: 0;
+      padding: 16px 20px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #fffcdc, #fff3bf);
+      border: 2px solid rgba(97, 84, 54, 0.72);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    .materials-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .material-row {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+    }
+
+    .material-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      object-fit: contain;
+      background: linear-gradient(180deg, #ffe37a, #f4bf2f);
+      border: 2px solid rgba(125, 94, 47, 0.9);
+      box-shadow: inset 0 0 0 1px rgba(255, 249, 203, 0.45);
+      padding: 2px;
+    }
+
+    .material-button {
+      border: none;
+      width: 100%;
+      padding: 2px 0;
+      background: transparent;
+      color: #3b342e;
+      text-align: left;
+      cursor: pointer;
+      font-size: 1.28rem;
+      line-height: 1.5;
+      transition: color 180ms ease, transform 180ms ease;
+    }
+
+    .material-button::before {
+      content: "";
+    }
+
+    .material-button:hover,
+    .material-button:focus-visible {
+      color: #a24917;
+      transform: translateX(2px);
+      outline: none;
+    }
+
+    .material-button.copied {
+      color: #2d8c4d;
+    }
+
+    .qty-pill {
+      display: none;
+    }
+
+    .card-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .action-button.secondary {
+      padding: 11px 15px;
+      color: #6d4528;
+      background: rgba(120, 73, 40, 0.11);
+    }
+
+    .empty-state {
+      padding: 42px 24px;
+      border-radius: 24px;
+      border: 1px dashed rgba(112, 72, 38, 0.24);
+      background: rgba(255, 251, 242, 0.65);
+      text-align: center;
+      color: #785439;
+      line-height: 1.7;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(44, 28, 17, 0.92);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+      z-index: 20;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes rise-in {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 1080px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        order: 2;
+      }
+
+      .main {
+        order: 1;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .shell {
+        width: min(100% - 20px, 1400px);
+        margin: 10px auto 20px;
+      }
+
+      .sidebar,
+      .hero,
+      .content,
+      .summary {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .sidebar {
+        padding-top: 20px;
+        padding-bottom: 20px;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-head {
+        align-items: flex-start;
+      }
+
+      .hero-logo {
+        width: 72px;
+        height: 72px;
+      }
+
+      .search-clear,
+      .toolbar .action-button {
+        width: 100%;
+      }
+
+      .item-card {
+        grid-template-columns: 1fr;
+      }
+
+      .item-main {
+        grid-template-columns: 82px minmax(0, 1fr);
+        gap: 12px;
+        padding: 12px;
+      }
+
+      .item-image-wrap {
+        width: 82px;
+        height: 82px;
+      }
+
+      .item-image-wrap img {
+        max-width: 68px;
+        max-height: 68px;
+      }
+
+      .item-body {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .item-body h3 {
+        white-space: normal;
+        font-size: 1.45rem;
+      }
+
+      .materials-panel {
+        width: 100%;
+      }
+
+      .material-row {
+        grid-template-columns: 24px minmax(0, 1fr);
+        gap: 8px;
+      }
+
+      .material-icon {
+        width: 24px;
+        height: 24px;
+      }
+
+      .card-actions {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="crest"><img id="sidebar-logo" alt="貿易所標誌"></div>
+      <div>
+        <h1>生活貿易查詢</h1>
+        <p>以貿易所為中心整理商品與材料，點一下材料就能複製，快速把清單帶進遊戲或記事工具。</p>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <span class="stat-label">Trade Posts</span>
+          <div class="stat-value" id="stat-posts">0</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Items</span>
+          <div class="stat-value" id="stat-items">0</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Materials</span>
+          <div class="stat-value" id="stat-materials">0</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Visible</span>
+          <div class="stat-value" id="stat-visible">0</div>
+        </div>
+      </div>
+
+      <div>
+        <p class="hint">貿易所切換</p>
+        <div class="post-list" id="post-list"></div>
+      </div>
+
+      <div class="quick-copy">
+        <p class="hint">快速操作</p>
+        <button type="button" id="copy-visible-materials">複製目前顯示材料</button>
+        <span class="hint">搜尋時會一起套用，只複製現在畫面看得到的材料名稱。</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Mabinogi Trading Post</p>
+          <div class="hero-head">
+            <div class="hero-logo"><img id="hero-logo" alt="貿易所標誌"></div>
+            <div>
+              <h2 id="hero-title">佩拉貿易所</h2>
+              <p id="hero-description">切換不同貿易所、搜尋商品或材料名稱，並直接複製你需要的項目。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <label class="search-box">
+            <span>⌕</span>
+            <input id="search-input" type="search" placeholder="搜尋商品、材料名稱，例如：木柴、藥水、香菇">
+          </label>
+          <button type="button" class="search-clear" id="search-clear">清除搜尋</button>
+          <button type="button" class="action-button primary" id="copy-active-post">複製此貿易所全部材料</button>
+        </div>
+      </section>
+
+      <section class="summary" id="summary"></section>
+
+      <section class="content">
+        <div class="item-grid" id="item-grid"></div>
+        <div class="empty-state" id="empty-state" hidden>
+          沒有符合的結果。<br>
+          可以試試別的商品名稱、材料名稱，或切回其他貿易所看看。
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const tradingPosts = [
+      {
+        id: "post-a",
+        title: "佩拉貿易所",
+        emoji: "🌋",
+        description: "高溫火山帶來濃烈風味與稀有素材，適合快速查火山系商品與板材、藥水配方。",
+        folder: "佩拉貿易所",
+        items: [
+          { icon: "🌋", name: "火山泥漿面膜", materials: [{ name: "銅板", qty: 50 }, { name: "神秘的香草粉", qty: 75 }] },
+          { icon: "🔥", name: "火山石", materials: [{ name: "秘銀板", qty: 30 }, { name: "大麥粉", qty: 45 }] },
+          { icon: "🦄", name: "伊克西翁的角", materials: [{ name: "人偶500藥水", qty: 30 }, { name: "金板", qty: 50 }] },
+          { icon: "🥚", name: "火山蜥蜴的卵", materials: [{ name: "閃光紙", qty: 40 }, { name: "優質布料", qty: 40 }, { name: "強化生命藥水(效果500)", qty: 16 }] },
+          { icon: "🦬", name: "拉斯帕黑豹的皮革", materials: [{ name: "基因突變體", qty: 3 }, { name: "和諧的波斯菊香水", qty: 6 }, { name: "特級木柴", qty: 9 }] }
+        ]
+      },
+      {
+        id: "post-b",
+        title: "凱麗達貿易所",
+        emoji: "🏕️",
+        description: "偏向野營、狩獵與溫泉調性的商品區，帳篷、鮭魚與木柴類材料集中在這裡。",
+        folder: "凱麗達貿易所",
+        items: [
+          { icon: "🍳", name: "麥飯石烤蛋", materials: [{ name: "強化魔法藥水(效果500)", qty: 25 }, { name: "高級木柴", qty: 50 }] },
+          { icon: "🐟", name: "凱麗達鮭魚", materials: [{ name: "能源轉換器", qty: 15 }, { name: "淨化的兔子腳", qty: 15 }] },
+          { icon: "🧖", name: "溫泉入浴劑", materials: [{ name: "黏黏的草", qty: 30 }, { name: "優質香草蠟燭", qty: 20 }] },
+          { icon: "⛺", name: "大型露營帳篷", materials: [{ name: "人工草皮", qty: 8 }, { name: "綠寶石保險絲", qty: 8 }, { name: "高級皮繩", qty: 40 }] },
+          { icon: "🧂", name: "玫瑰鹽", materials: [{ name: "秘銀鐵釘", qty: 9 }, { name: "弩炮專用浸毒瓦伊凡弩箭", qty: 9 }, { name: "優質木柴", qty: 9 }] }
+        ]
+      },
+      {
+        id: "post-c",
+        title: "綠洲貿易所",
+        emoji: "🏝️",
+        description: "沙地、綠洲與精靈風格的材料組合，常見於布料、圖書與化石相關商品。",
+        folder: "綠洲貿易所",
+        items: [
+          { icon: "🏝️", name: "細沙", materials: [{ name: "強化耐力藥水(效果500)", qty: 75 }, { name: "繩結線", qty: 50 }] },
+          { icon: "🦌", name: "牟獄鬼魂的翅膀", materials: [{ name: "抱枕用棉花", qty: 15 }, { name: "優質絲綢", qty: 30 }] },
+          { icon: "🏝️", name: "綠洲圖書", materials: [{ name: "優質皮繩", qty: 10 }, { name: "粗線", qty: 30 }] },
+          { icon: "🌸", name: "仙人掌花", materials: [{ name: "精靈的白葡萄酒", qty: 8 }, { name: "銀板", qty: 16 }, { name: "高級布料", qty: 32 }] },
+          { icon: "🦖", name: "巨大尖牙化石", materials: [{ name: "寵物遊戲組合", qty: 3 }, { name: "乾草堆", qty: 9 }, { name: "聚集魔力的木柴", qty: 15 }] }
+        ]
+      },
+      {
+        id: "post-d",
+        title: "卡魯森林貿易所",
+        emoji: "🌲",
+        description: "木工、香菇、化石與森林系工藝品集中在這裡，適合快速對照木材與加工素材。",
+        folder: "卡魯森林貿易所",
+        items: [
+          { icon: "🪑", name: "木製桌子", materials: [{ name: "鮮蝦訓練誘餌", qty: 100 }, { name: "希里原", qty: 50 }] },
+          { icon: "🛺", name: "木工藝品", materials: [{ name: "魔法的羊皮紙", qty: 15 }, { name: "粗繩", qty: 30 }] },
+          { icon: "🐎", name: "石頭戰馬雕刻像", materials: [{ name: "稀原合金", qty: 20 }, { name: "小麥粉", qty: 50 }] },
+          { icon: "🍄", name: "卡魯香菇", materials: [{ name: "旋轉齒輪", qty: 8 }, { name: "中級木柴", qty: 40 }, { name: "高級絲綢", qty: 32 }] },
+          { icon: "🐚", name: "貝殼化石", materials: [{ name: "能量增幅裝置", qty: 6 }, { name: "堅固之鏈", qty: 3 }, { name: "魔法的羽毛筆", qty: 15 }] }
+        ]
+      }
+    ];
+
+    const imageBase = "./貿易圖片分類";
+    const state = {
+      activePostId: tradingPosts[0].id,
+      query: ""
+    };
+
+    const postList = document.getElementById("post-list");
+    const itemGrid = document.getElementById("item-grid");
+    const summary = document.getElementById("summary");
+    const heroTitle = document.getElementById("hero-title");
+    const heroDescription = document.getElementById("hero-description");
+    const heroLogo = document.getElementById("hero-logo");
+    const sidebarLogo = document.getElementById("sidebar-logo");
+    const searchInput = document.getElementById("search-input");
+    const searchClear = document.getElementById("search-clear");
+    const copyVisibleMaterialsButton = document.getElementById("copy-visible-materials");
+    const copyActivePostButton = document.getElementById("copy-active-post");
+    const emptyState = document.getElementById("empty-state");
+    const toast = document.getElementById("toast");
+
+    const statPosts = document.getElementById("stat-posts");
+    const statItems = document.getElementById("stat-items");
+    const statMaterials = document.getElementById("stat-materials");
+    const statVisible = document.getElementById("stat-visible");
+
+    const totals = tradingPosts.reduce((acc, post) => {
+      acc.items += post.items.length;
+      acc.materials += post.items.reduce((sum, item) => sum + item.materials.length, 0);
+      return acc;
+    }, { items: 0, materials: 0 });
+
+    tradingPosts.forEach(post => {
+      post.logo = `${imageBase}/${post.folder}/${encodeURIComponent(post.title)}.png`;
+      post.items.forEach(item => {
+        item.image = `${imageBase}/${post.folder}/${encodeURIComponent(item.name)}.png`;
+        item.materials.forEach(material => {
+          material.image = `${imageBase}/${post.folder}/${encodeURIComponent(material.name)}.png`;
+        });
+      });
+    });
+
+    function applyLogoImage(img, src, alt) {
+      img.src = src;
+      img.alt = alt;
+      img.onerror = () => {
+        img.removeAttribute("src");
+        img.alt = `${alt} logo missing`;
+      };
+    }
+
+    function getActivePost() {
+      return tradingPosts.find(post => post.id === state.activePostId) || tradingPosts[0];
+    }
+
+    function getFilteredItems(post) {
+      const query = state.query.trim().toLowerCase();
+      if (!query) {
+        return post.items;
+      }
+
+      return post.items.filter(item => {
+        const haystacks = [
+          item.name,
+          ...item.materials.map(material => material.name)
+        ];
+        return haystacks.some(value => value.toLowerCase().includes(query));
+      });
+    }
+
+    function collectVisibleMaterials(items) {
+      return items.flatMap(item => item.materials.map(material => material.name));
+    }
+
+    function uniqueStrings(values) {
+      return [...new Set(values)];
+    }
+
+    async function copyText(text) {
+      if (!text) {
+        return false;
+      }
+
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (error) {
+        const temp = document.createElement("textarea");
+        temp.value = text;
+        temp.style.position = "fixed";
+        temp.style.opacity = "0";
+        document.body.appendChild(temp);
+        temp.focus();
+        temp.select();
+        const success = document.execCommand("copy");
+        temp.remove();
+        return success;
+      }
+    }
+
+    let toastTimer = null;
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 1800);
+    }
+
+    function renderPostList() {
+      postList.innerHTML = "";
+      tradingPosts.forEach(post => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `post-button${post.id === state.activePostId ? " active" : ""}`;
+        button.innerHTML = `
+          <span class="post-emoji"><img src="${post.logo}" alt="${post.title}"></span>
+          <span class="post-meta">
+            <strong>${post.title}</strong>
+            <span>${post.items.length} 個商品</span>
+          </span>
+          <span class="post-count">${post.items.reduce((sum, item) => sum + item.materials.length, 0)} 材料</span>
+        `;
+        button.addEventListener("click", () => {
+          state.activePostId = post.id;
+          render();
+        });
+        postList.appendChild(button);
+      });
+    }
+
+    function renderSummary(activePost, visibleItems) {
+      const materials = uniqueStrings(collectVisibleMaterials(visibleItems));
+      const totalQty = visibleItems.reduce((sum, item) => sum + item.materials.reduce((qtySum, material) => qtySum + material.qty, 0), 0);
+      summary.innerHTML = `
+        <div class="summary-chip">目前貿易所：<strong>${activePost.title}</strong></div>
+        <div class="summary-chip">顯示商品：<strong>${visibleItems.length}</strong></div>
+        <div class="summary-chip">獨立材料：<strong>${materials.length}</strong></div>
+        <div class="summary-chip">總需求數量：<strong>${totalQty}</strong></div>
+      `;
+    }
+
+    function renderItems(activePost, visibleItems) {
+      itemGrid.innerHTML = "";
+      emptyState.hidden = visibleItems.length !== 0;
+
+      visibleItems.forEach((item, index) => {
+        const card = document.createElement("article");
+        card.className = "item-card";
+        card.style.animationDelay = `${index * 35}ms`;
+        const materialRows = item.materials.map(material => `
+          <div class="material-row">
+            <img class="material-icon" src="${material.image}" alt="${material.name}" loading="lazy">
+            <button type="button" class="material-button" data-copy="${material.name}">${material.name}x${material.qty}</button>
+            <span class="qty-pill">x${material.qty}</span>
+          </div>
+        `).join("");
+
+        card.innerHTML = `
+          <div class="item-main">
+            <div class="item-image-wrap">
+              <span class="item-badge">${item.icon}</span>
+              <img src="${item.image}" alt="${item.name}" loading="lazy">
+            </div>
+            <div class="item-body">
+              <div class="item-title">
+                <h3>${item.name}</h3>
+                <p class="item-subtitle">${activePost.title}</p>
+              </div>
+              <div class="card-actions">
+                <button type="button" class="action-button primary" data-copy-group="${item.name}">複製整組材料</button>
+                <button type="button" class="action-button secondary" data-copy-item="${item.name}">複製商品名稱</button>
+              </div>
+            </div>
+          </div>
+          <div class="materials-panel">
+            <div class="materials-list">${materialRows}</div>
+          </div>
+        `;
+
+        const image = card.querySelector("img");
+        image.addEventListener("error", () => {
+          image.alt = `${item.name}（圖片遺失）`;
+          image.style.display = "none";
+          card.querySelector(".item-image-wrap").insertAdjacentHTML(
+            "beforeend",
+            `<div style="color:#704729;font-weight:700;text-align:center;">未找到圖片<br>${item.name}</div>`
+          );
+        }, { once: true });
+
+        card.querySelectorAll(".material-icon").forEach(materialImage => {
+          materialImage.addEventListener("error", () => {
+            materialImage.style.visibility = "hidden";
+          }, { once: true });
+        });
+
+        itemGrid.appendChild(card);
+      });
+    }
+
+    function updateStats(visibleItems) {
+      statPosts.textContent = tradingPosts.length;
+      statItems.textContent = totals.items;
+      statMaterials.textContent = totals.materials;
+      statVisible.textContent = visibleItems.length;
+    }
+
+    function attachEvents(activePost, visibleItems) {
+      itemGrid.querySelectorAll("[data-copy]").forEach(button => {
+        button.addEventListener("click", async () => {
+          const text = button.dataset.copy;
+          const success = await copyText(text);
+          if (success) {
+            button.classList.add("copied");
+            showToast(`已複製材料：${text}`);
+            setTimeout(() => button.classList.remove("copied"), 900);
+          }
+        });
+      });
+
+      itemGrid.querySelectorAll("[data-copy-group]").forEach(button => {
+        button.addEventListener("click", async () => {
+          const item = visibleItems.find(entry => entry.name === button.dataset.copyGroup);
+          const text = item.materials.map(material => `${material.name} x${material.qty}`).join("\n");
+          if (await copyText(text)) {
+            showToast(`已複製整組：${item.name}`);
+          }
+        });
+      });
+
+      itemGrid.querySelectorAll("[data-copy-item]").forEach(button => {
+        button.addEventListener("click", async () => {
+          if (await copyText(button.dataset.copyItem)) {
+            showToast(`已複製商品：${button.dataset.copyItem}`);
+          }
+        });
+      });
+
+      copyVisibleMaterialsButton.onclick = async () => {
+        const materials = uniqueStrings(collectVisibleMaterials(visibleItems));
+        if (!materials.length) {
+          showToast("目前沒有可複製的材料");
+          return;
+        }
+        if (await copyText(materials.join("\n"))) {
+          showToast(`已複製 ${materials.length} 個材料名稱`);
+        }
+      };
+
+      copyActivePostButton.onclick = async () => {
+        const items = activePost.items;
+        const text = items.map(item => {
+          const materials = item.materials.map(material => `- ${material.name} x${material.qty}`).join("\n");
+          return `${item.name}\n${materials}`;
+        }).join("\n\n");
+        if (await copyText(text)) {
+          showToast(`已複製 ${activePost.title} 全部商品配方`);
+        }
+      };
+    }
+
+    function render() {
+      const activePost = getActivePost();
+      const visibleItems = getFilteredItems(activePost);
+
+      heroTitle.textContent = activePost.title;
+      heroDescription.textContent = activePost.description;
+      applyLogoImage(heroLogo, activePost.logo, activePost.title);
+      applyLogoImage(sidebarLogo, activePost.logo, activePost.title);
+
+      renderPostList();
+      renderSummary(activePost, visibleItems);
+      renderItems(activePost, visibleItems);
+      updateStats(visibleItems);
+      attachEvents(activePost, visibleItems);
+    }
+
+    searchInput.addEventListener("input", event => {
+      state.query = event.target.value;
+      render();
+    });
+
+    searchClear.addEventListener("click", () => {
+      state.query = "";
+      searchInput.value = "";
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
