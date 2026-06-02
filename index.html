@@ -593,6 +593,146 @@
       line-height: 1.7;
     }
 
+    .route-modal {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(42, 26, 15, 0.68);
+      backdrop-filter: blur(8px);
+      z-index: 30;
+    }
+
+    .route-modal[hidden] {
+      display: none;
+    }
+
+    .route-panel {
+      width: min(1100px, 100%);
+      max-height: calc(100vh - 48px);
+      overflow: auto;
+      padding: 20px;
+      border-radius: 26px;
+      background:
+        linear-gradient(180deg, rgba(255, 251, 239, 0.98), rgba(243, 224, 187, 0.96)),
+        linear-gradient(135deg, rgba(255, 210, 142, 0.3), transparent 58%);
+      border: 2px solid rgba(122, 82, 46, 0.35);
+      box-shadow: var(--shadow);
+    }
+
+    .route-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .route-panel-head h3 {
+      margin: 0;
+      color: #5c3920;
+      font-size: 1.6rem;
+    }
+
+    .route-panel-head p {
+      margin: 6px 0 0;
+      color: #7b5739;
+    }
+
+    .route-close {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 999px;
+      background: rgba(120, 73, 40, 0.12);
+      color: #6d4528;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+    }
+
+    .route-grid {
+      display: grid;
+      grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .route-list {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .route-tab {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid rgba(110, 69, 35, 0.14);
+      border-radius: 18px;
+      background: rgba(255, 248, 235, 0.9);
+      color: #5c3920;
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .route-tab:hover,
+    .route-tab:focus-visible {
+      transform: translateY(-1px);
+      border-color: rgba(110, 69, 35, 0.3);
+      outline: none;
+    }
+
+    .route-tab.active {
+      background: linear-gradient(180deg, #ffe8aa, #ffd57d);
+      border-color: rgba(110, 69, 35, 0.42);
+      font-weight: 700;
+    }
+
+    .route-preview {
+      padding: 14px;
+      border-radius: 20px;
+      background: rgba(255, 248, 235, 0.9);
+      border: 1px solid rgba(110, 69, 35, 0.14);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .route-preview h4 {
+      margin: 0 0 12px;
+      color: #5c3920;
+      font-size: 1.1rem;
+    }
+
+    .route-preview img {
+      width: 100%;
+      display: block;
+      border-radius: 14px;
+      border: 1px solid rgba(110, 69, 35, 0.18);
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    .route-reference {
+      margin: 14px 0 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255, 248, 235, 0.9);
+      border: 1px solid rgba(110, 69, 35, 0.14);
+      color: #6b4327;
+      line-height: 1.7;
+    }
+
+    .route-reference strong {
+      color: #5c3920;
+    }
+
+    .route-reference a {
+      color: #8f4c1f;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
     .toast {
       position: fixed;
       right: 18px;
@@ -725,6 +865,24 @@
         flex-direction: row;
         flex-wrap: wrap;
       }
+
+      .route-modal {
+        padding: 12px;
+      }
+
+      .route-panel {
+        padding: 14px;
+        max-height: calc(100vh - 24px);
+      }
+
+      .route-panel-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .route-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -797,6 +955,7 @@
             <input id="search-input" type="search" placeholder="搜尋商品、材料名稱，例如：木柴、藥水、香菇">
           </label>
           <button type="button" class="search-clear" id="search-clear">清除搜尋</button>
+          <button type="button" class="action-button secondary" id="route-reference-button">路線參考</button>
           <button type="button" class="action-button primary" id="copy-active-post">複製此貿易所全部材料</button>
         </div>
       </section>
@@ -811,6 +970,34 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <div class="route-modal" id="route-modal" hidden>
+    <div class="route-panel" role="dialog" aria-modal="true" aria-labelledby="route-modal-title">
+      <div class="route-panel-head">
+        <div>
+          <h3 id="route-modal-title">路線參考</h3>
+          <p>這裡會顯示你放進資料夾內的兩張路線圖。</p>
+        </div>
+        <button type="button" class="route-close" id="route-close-button">關閉</button>
+      </div>
+      <div class="route-reference">
+        <strong>文獻參考網址：</strong>
+        <a href="https://forum.gamer.com.tw/C.php?bsn=7422&snA=241456" target="_blank" rel="noopener noreferrer">
+          巴哈姆特：【心得】生活貿易-材料變更示意圖+改版前個人貿易路線
+        </a>
+      </div>
+      <div class="route-grid">
+        <div class="route-list">
+          <button type="button" class="route-tab active" data-route-target="A">路線 A</button>
+          <button type="button" class="route-tab" data-route-target="B">路線 B</button>
+        </div>
+        <article class="route-preview">
+          <h4 id="route-preview-title">路線 A</h4>
+          <img id="route-preview-image" src="./貿易圖片分類/地圖路線/地圖路線A.png" alt="路線圖 A" loading="lazy">
+        </article>
+      </div>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -890,6 +1077,12 @@
     const sidebarLogo = document.getElementById("sidebar-logo");
     const searchInput = document.getElementById("search-input");
     const searchClear = document.getElementById("search-clear");
+    const routeReferenceButton = document.getElementById("route-reference-button");
+    const routeModal = document.getElementById("route-modal");
+    const routeCloseButton = document.getElementById("route-close-button");
+    const routePreviewTitle = document.getElementById("route-preview-title");
+    const routePreviewImage = document.getElementById("route-preview-image");
+    const routeTabs = document.querySelectorAll("[data-route-target]");
     const copyVisibleMaterialsButton = document.getElementById("copy-visible-materials");
     const copyActivePostButton = document.getElementById("copy-active-post");
     const emptyState = document.getElementById("empty-state");
@@ -899,6 +1092,18 @@
     const statItems = document.getElementById("stat-items");
     const statMaterials = document.getElementById("stat-materials");
     const statVisible = document.getElementById("stat-visible");
+    const routeImages = {
+      A: {
+        title: "路線 A",
+        src: "./貿易圖片分類/地圖路線/地圖路線A.png",
+        alt: "路線圖 A"
+      },
+      B: {
+        title: "路線 B",
+        src: "./貿易圖片分類/地圖路線/地圖路線B.jpg",
+        alt: "路線圖 B"
+      }
+    };
 
     const totals = tradingPosts.reduce((acc, post) => {
       acc.items += post.items.length;
@@ -923,6 +1128,21 @@
         img.removeAttribute("src");
         img.alt = `${alt} logo missing`;
       };
+    }
+
+    function setActiveRoute(routeKey) {
+      const route = routeImages[routeKey];
+      if (!route) {
+        return;
+      }
+
+      routePreviewTitle.textContent = route.title;
+      routePreviewImage.src = route.src;
+      routePreviewImage.alt = route.alt;
+
+      routeTabs.forEach(tab => {
+        tab.classList.toggle("active", tab.dataset.routeTarget === routeKey);
+      });
     }
 
     function getActivePost() {
@@ -1161,6 +1381,33 @@
       state.query = "";
       searchInput.value = "";
       render();
+    });
+
+    routeReferenceButton.addEventListener("click", () => {
+      routeModal.hidden = false;
+      setActiveRoute("A");
+    });
+
+    routeCloseButton.addEventListener("click", () => {
+      routeModal.hidden = true;
+    });
+
+    routeModal.addEventListener("click", event => {
+      if (event.target === routeModal) {
+        routeModal.hidden = true;
+      }
+    });
+
+    routeTabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        setActiveRoute(tab.dataset.routeTarget);
+      });
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && !routeModal.hidden) {
+        routeModal.hidden = true;
+      }
     });
 
     render();
