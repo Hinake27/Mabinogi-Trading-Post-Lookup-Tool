@@ -1,4 +1,4 @@
-# Mabinogi Trading Post Lookup Tool
+# 生活貿易查詢工具
 
 一個為《新瑪奇 / Mabinogi》生活貿易整理的靜態查詢工具。
 
